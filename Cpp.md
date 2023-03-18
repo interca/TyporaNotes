@@ -14,6 +14,51 @@ c++  vectorPush一个vector是值Push
 
 **+= 比较快**
 
+```cpp
+const int N=1010;
+class Solution {
+public:
+    int a[(int)4e5][26];
+    int index=0;
+    int sum[(int)4e5];
+    vector<int> sumPrefixScores(vector<string>& words) {
+        int n=words.size();
+         for(int i=0;i<n;i++){
+             insert(words[i]);
+         }
+         vector<int>v(n);
+         for(int i=0;i<n;i++){
+             v[i]=query(words[i]);
+         }
+         return v;
+    }
+    
+    int  query(string s){
+        int count=0;
+        int q=0;
+        for(int i=0;i<s.size();i++){
+            int k=s[i]-'a';
+            if(a[q][k]==0)break;
+            q=a[q][k];
+            count+=sum[q];
+        }
+        return count;
+    }
+
+    void insert(string s){
+        int q=0;
+        for(int i=0;i<s.size();i++){
+           int k=s[i]-'a';
+           if(a[q][k]==0)a[q][k]=++index;
+           q=a[q][k];
+           sum[q]++;
+        }
+    }
+};··
+```
+
+
+
 ## 一、头文件
 
 //解决爆栈，手动加栈，必须放在头文件之前
