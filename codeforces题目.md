@@ -1010,6 +1010,53 @@ void solve(){
 
 
 
+### 21、保留一种字母
+
+给一个字符串，每次可以删除一个或者多个字母，不能删除相邻的，问操作多少次可以让字符串只剩一种字母
+
+>枚举保留的字母，然后删除
+>比如abbbabbccca
+>保留a  那么有三段要删除  bbb  bb  ccc
+>用循环删除，每次除以2就少一半
+
+```cpp
+void solve(){
+  string s;
+  cin >> s;
+  int a[26];
+  memset(a,0,sizeof(a));
+  for(auto k : s){
+     int w = k - 'a';
+     a[w] ++;
+  }
+  int mn = 100000000;
+  for(int i = 0 ;i  < 26 ; i ++){
+    if(a[i] == 0)continue;
+    char b = i + 'a';
+    int mx = 0;
+    int sum = 0;
+    for(int i = 0 ; i < s.size() ; i ++){
+       if(s[i] == b){
+          mx = max(sum,mx);
+          sum = 0;
+       }else {
+          sum ++;
+          mx = max(sum,mx);
+       }
+    }
+    int sm = 0;
+    while(mx){
+       if(mx % 2 == 0){
+         mx = mx /2;
+       }else mx = mx / 2;
+       sm ++;
+    }
+    mn = min(mn,sm);
+  }
+  cout<<mn<<endl;
+}
+```
+
 
 
 ## 三、动态规划
