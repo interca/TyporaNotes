@@ -2,15 +2,17 @@
 
 ## 注意事项
 
-从一个容器取出另一个容器，最好用&
-
-比如set s=&map[index]
-
-int &a = f(i)
-
-可以取出值 并且可以改变a来改变f(i)
-
-c++  vectorPush一个vector是值Push
+>从一个容器取出另一个容器，最好用&
+>
+>比如set s=&map[index]
+>
+>int &a = f(i)
+>
+>可以取出值 并且可以改变a来改变f(i)
+>
+>c++  vectorPush一个vector是值Push
+>
+>最好用depue
 
 **+= 比较快**
 
