@@ -1,6 +1,30 @@
 # Git
 
-## 一、基本指令和简介
+## 操作
+
+添加远程分支
+
+```
+git remote add gitee2 https://gitee.com/hongshenghyj/test.git
+
+```
+
+
+
+推送代码到远程分支的hyj分支
+
+```
+git push gitee2 master:hyj
+
+```
+
+
+
+
+
+
+
+## 基本指令和简介
 
 ## 注意
 
