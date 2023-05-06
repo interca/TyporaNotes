@@ -1059,6 +1059,88 @@ void solve(){
 
 
 
+
+
+### 22、回文(cf 870 div2)
+
+题目
+有一个数组，求一个x，使得数组里面的值mod x 后，数组是一个回文数组，求x最大是多少,如果x取到无穷大，用0代替
+
+思路
+>首先x最大肯定不能超过数组的最大值
+>先看一个例子：如果是   2   和  10  取模后相等， 找出这个取模的数，那么这个数是  abs(a - b)
+>所以我们只要找出所有的取模数，找出他们的最大公因数就行了
+
+```cpp
+void solve(){
+  int n;
+  cin>>n;
+  vector<long long>v(n);
+  for(int i = 0 ;i < n ; i++)cin>>v[i];
+  if(n == 1){
+    cout<<0<<endl;
+    return;
+  }
+  vector<int>v2;
+  for(int i = 0 ; i < n / 2; i ++){
+    v2.push_back((int)abs(v[i] - v[n - i - 1]));
+  }
+  sort(v2.begin(),v2.end());
+  int s = v2[0];
+  for(int i = 1 ; i< v2.size() ; i ++){
+     s = __gcd(s,v2[i]);
+  } 
+  cout<<s<<endl;
+}
+```
+
+
+
+
+
+
+
+### 23、投票(870)
+
+题目
+有n个人，m个物品，题目每人可以投票在每一轮，每一轮保留最大票数得物品，如果只剩最后一个物品，输出yes
+问有没有投票方法可以让投票循环下去，有的话输出no
+
+>如果m 和 n只有一个，那肯定可以结束
+>否则找n的因子，如果找到后，就把票平分给这些因子，就可以无限循环
+
+```cpp
+void solve(){
+  int n,m;
+  cin>>n>>m;
+  if(n == 1 || m == 1){
+    cout<<"YES"<<endl;
+    return;
+  }
+  if(n <= m){
+    cout<<"NO"<<endl;
+    return;
+  }
+  for(int i = 2 ; i * i <= n && i <= m ; i ++){
+    if(n % i == 0){
+      cout<<"NO"<<endl;
+      return;
+    }
+  }
+  cout<<"YES"<<endl;
+}
+```
+
+
+
+
+
+
+
+
+
+
+
 ## 三、动态规划
 
 ### 1、妖塔(华东交通牛客月赛)
