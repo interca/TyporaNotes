@@ -1,5 +1,9 @@
 # redis
 
+## 安装
+
+[(90条消息) 史上最详细Docker安装Redis （含每一步的图解）实战_docker redis_宁在春的博客-CSDN博客](https://blog.csdn.net/weixin_45821811/article/details/116211724)
+
 ## 注意：
 
 使用图形化界面记得关闭虚拟机的防火墙
