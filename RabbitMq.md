@@ -4,6 +4,31 @@
 
 [CentOS 7 安装 RabbitMQ - 腾讯云开发者社区-腾讯云 (tencent.com)](https://cloud.tencent.com/developer/article/1958099)
 
+>docker 安装 这里用了数据卷挂载
+>默认的admin不能登入
+>所以要重新创建用户：
+>
+>添加账号：rabbitmqctl add_user gq 123
+>
+>设置角色：rabbitmqctl set_user_tags gq administrator
+>
+>设置权限：rabbitmqctl set_permissions -p "/" gq ".*" ".*" ".*"
+
+```
+docker run -d  
+-p 15672:15672 
+-p 5672:5672 -v 
+rabbitmq-data:/var/lib/rabbitmq 
+-e RABBITMQ_DEFAULT_USER=admin 
+-e RABBITMQ_DEFAULT_PASS=123 
+--name myrabbitmq 
+--hostname=rabbitmqhostone rabbitmq:management
+```
+
+
+
+
+
 ## 注意
 
 >控制台访问地址是http  没有https

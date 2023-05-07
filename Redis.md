@@ -4,6 +4,23 @@
 
 [(90条消息) 史上最详细Docker安装Redis （含每一步的图解）实战_docker redis_宁在春的博客-CSDN博客](https://blog.csdn.net/weixin_45821811/article/details/116211724)
 
+
+
+docker 安装
+
+```
+docker run --restart=always --log-opt max-size=100m --log-opt max-file=2 
+-p 6379:6379 
+--name myredis 
+-v redis-config:/etc/redis/redis.conf 
+-v redis-data:/data 
+-d redis redis-server /etc/redis/redis.conf 
+--appendonly yes 
+--requirepass 123//设置密码
+```
+
+
+
 ## 注意：
 
 使用图形化界面记得关闭虚拟机的防火墙
