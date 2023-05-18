@@ -22,7 +22,8 @@ rabbitmq-data:/var/lib/rabbitmq
 -e RABBITMQ_DEFAULT_USER=admin 
 -e RABBITMQ_DEFAULT_PASS=123 
 --name myrabbitmq 
---hostname=rabbitmqhostone rabbitmq:management
+--hostname=rabbitmqhostone
+rabbitmq:management
 ```
 
 

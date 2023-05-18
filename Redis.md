@@ -8,6 +8,8 @@
 
 docker 安装
 
+>没有指定redis镜像，会默认使用最新的
+
 ```
 docker run --restart=always --log-opt max-size=100m --log-opt max-file=2 
 -p 6379:6379 
