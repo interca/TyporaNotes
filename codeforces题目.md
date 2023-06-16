@@ -1137,6 +1137,45 @@ void solve(){
 
 
 
+### 24、找最小子数组排列(877)
+
+题目
+给一个排列，里面是1到n,必须交换两个位置，求最小子数组是排列个数，子数组就是去头去尾
+比如 1 2 3    子数组是 1  12  123  这三个都是排列
+
+思路
+>把n放到1和2中间，这样子最小值就是2
+
+
+
+```cpp
+void solve(){
+  int n;
+  cin>>n;
+  vector<long long>v(n + 1);
+  int x,y,z;
+  for(int i = 1 ; i <= n ; i ++){
+    cin>>v[i];
+    if(v[i] == 1)x = i;
+    if(v[i] == 2)y = i;
+    if(v[i] == n)z = i;
+  }
+  int mx = max(x,y);
+  int mn = min(x,y);
+  if(z >= mn && z <= mx){
+    cout<<mn<<" "<<mx<<endl;
+  }else {
+    if(z < mn){
+      cout<<z<<" "<<mn<<endl;
+    }else {
+      cout<<z<<" "<<mx<<endl;
+    }
+  }
+}
+```
+
+
+
 
 
 
