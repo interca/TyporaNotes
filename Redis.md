@@ -23,6 +23,28 @@ docker run --restart=always --log-opt max-size=100m --log-opt max-file=2
 
 
 
+
+
+
+
+
+>先创建数据卷
+
+```
+docker run -d --name nacos-standalone \
+  -e MODE=standalone \
+  -e NACOS_AUTH_ENABLE=true \
+  -e NACOS_AUTH_USERNAME=admin \
+  -e NACOS_AUTH_PASSWORD=admin \
+  -p 8848:8848 \
+  -v nacos-config:/nacos/conf \
+  -v nacos-data:/nacos/data \
+  nacos/nacos-server:1.4.1
+
+```
+
+
+
 ## 注意：
 
 使用图形化界面记得关闭虚拟机的防火墙

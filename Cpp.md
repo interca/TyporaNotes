@@ -292,6 +292,8 @@ int main(){
 
 
 
+
+
 ### 7、vector
 
 ####  7.1排序
@@ -412,13 +414,45 @@ class Solution {
 
 
 
+
+
+看代码是什么内容 比较器套上一些结构
+
+```c++
+  struct node{
+       bool operator()(ListNode* x, ListNode* y) const {
+        return x->val > y->val;
+      }
+  };
+    ListNode* mergeKLists(vector<ListNode*>& lists) {
+       priority_queue<ListNode*,vector<ListNode*>,node>heap;
+       return NULL;
+    }
+```
+
+
+
+或者这样子
+
+```c++
+auto compare = [](ListNode* x, ListNode* y) {
+    return x->val > y->val;
+};
+std::priority_queue<ListNode*, std::vector<ListNode*>, decltype(compare)> heap(compare);
+
+```
+
+
+
+
+
 二维数组排序
 
 ```cpp
 sort(nums1.rbegin(),nums1.rend());
     sort(v.begin(),v.end(),[&](vector<int>&h1,vector<int>&h2){
     return h1[0]>h2[0];
-    }
+}
 ```
 
 
@@ -504,4 +538,59 @@ e.erase(it2,it3);    //删除it2到it3之间的元素
 
 
 
+
+
+
+### 10、multiset
+
+>multiset是有序的，begin返回第一个元素，end返回集合尾部之后的位置，rbegin返回集合最后一个位置
+
+```cpp
+class Solution {
+public:
+    long long continuousSubarrays(vector<int>& nums) {
+        long long ans = 0;
+        multiset<int> s;
+        int left = 0, n = nums.size();
+        for (int right = 0; right < n; right++) {
+            s.insert(nums[right]);
+            while (*s.rbegin() - *s.begin() > 2)
+                s.erase(s.find(nums[left++]));
+            ans += right - left + 1;
+        }
+        return ans;
+    }
+};
+```
+
+
+
+>可以用lower_bond找出大于等于某个数的第一个元素，
+>upper是大于
+>*pre是上一个元素 可以找出小于等于某个数的最大元素
+
+```cpp
+class Solution {
+public:
+    int minAbsoluteDifference(vector<int>& nums, int x) {
+        if (x == 0) return 0;
+        int n = nums.size();
+        multiset<int> ms;
+        for (int i = x; i < n; i++) ms.insert(nums[i]);
+
+        int ans = 1e9;
+        for (int i = 0; i < n; i++) {
+            // 用 multiset.lower_bound 找出两个目标整数
+            auto it = ms.lower_bound(nums[i]);
+            if (it != ms.end()) ans = min(ans, *it - nums[i]);
+            if (it != ms.begin()) ans = min(ans, nums[i] - *prev(it));
+            // 滑动窗口向右移动一格
+            if (i + x < n) ms.erase(ms.find(nums[i + x]));
+            if (i + 1 - x >= 0) ms.insert(nums[i + 1 - x]);
+        }
+        return ans;
+
+    }
+};
+```
 
