@@ -16,6 +16,19 @@ init()会在main函数前执行，如果导入包有Init,会依次执行
 声明在函数外部且首字母大写是所有包可见的全局值,类似public
  import 下划线（如：import *hello/imp）的作用：当导入一个包时，该包下的文件里所有init()函数都会被执行，然而，有些时候我们并不需要把整个包都导入进来，仅仅是是希望它执行init()函数而已。这个时候就可以使用 import* 引用该包。即使用【import _ 包路径】只是引用该包，仅仅是为了调用init()函数，所以无法通过包名来调用包中的其他函数。
 
+```go
+if err := recover(); err != nil {
+            fmt.Println(err)
+        }
+```
+
+```go
+//调用匿名函数
+func(x int){
+   fmt.Println(1)
+}(1)
+```
+
 
 
 ### 声明变量
@@ -1653,3 +1666,799 @@ func main() {
     4
 ```
 
+
+
+
+
+
+
+defer f.Close
+>defer捕获整个函数，如果不是Test*  就会输出不同结果
+
+```go
+package main
+
+import "fmt"
+
+type Test struct {
+    name string
+}
+
+func (t *Test) Close() {
+    fmt.Println(t.name, " closed")
+}
+func main() {
+    ts := []Test{{"a"}, {"b"}, {"c"}}
+    for _, t := range ts {
+        defer t.Close()
+    }
+}
+```
+
+输出结果：
+
+```
+    c  closed
+    c  closed
+    c  closed
+```
+
+
+
+
+
+延迟调用参数在注册时求值或复制，可用指针或闭包 "延迟" 读取。
+
+```go
+package main
+
+func test() {
+    x, y := 10, 20
+
+    defer func(i int) {
+        println("defer:", i, y) // y 闭包引用
+    }(x) // x 被复制
+
+    x += 10
+    y += 100
+    println("x =", x, "y =", y)
+}
+
+func main() {
+    test()
+}
+```
+
+输出结果:
+
+```
+    x = 20 y = 120
+    defer: 10 120
+```
+
+
+
+#### defer 与 closure
+
+```go
+package main
+
+import (
+    "errors"
+    "fmt"
+)
+
+func foo(a, b int) (i int, err error) {
+    defer fmt.Printf("first defer err %v\n", err)
+    defer func(err error) { fmt.Printf("second defer err %v\n", err) }(err)
+    defer func() { fmt.Printf("third defer err %v\n", err) }()
+    if b == 0 {
+        err = errors.New("divided by zero!")
+        return
+    }
+
+    i = a / b
+    return
+}
+
+func main() {
+    foo(2, 0)
+}
+```
+
+输出结果：
+
+```
+    third defer err divided by zero!
+    second defer err <nil>
+    first defer err <nil>
+```
+
+解释：如果 defer 后面跟的不是一个 closure 最后执行的时候我们得到的并不是最新的值。
+
+
+
+
+
+#### defer 与 return
+
+```go
+package main
+
+import "fmt"
+
+func foo() (i int) {
+
+    i = 0
+    defer func() {
+        fmt.Println(i)
+    }()
+
+    return 2
+}
+
+func main() {
+    foo()
+}
+```
+
+输出结果：
+
+```
+    2
+```
+
+解释：在有具名返回值的函数中（这里具名返回值为 i），执行 return 2 的时候实际上已经将 i 的值重新赋值为 2。所以defer closure 输出结果为 2 而不是 1。
+
+#### defer nil 函数
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+func test() {
+    var run func() = nil
+    defer run()
+    fmt.Println("runs")
+}
+
+func main() {
+    defer func() {
+        if err := recover(); err != nil {
+            fmt.Println(err)
+        }
+    }()
+    test()
+}
+```
+
+输出结果：
+
+```
+runs
+runtime error: invalid memory address or nil pointer dereference
+```
+
+解释：名为 test 的函数一直运行至结束，然后 defer 函数会被执行且会因为值为 nil 而产生 panic 异常。然而值得注意的是，run() 的声明是没有问题，因为在test函数运行完成后它才会被调用。
+
+
+
+
+
+#### 关闭资源
+
+当延迟函数执行时，只有最后一个变量会被用到，因此，f 变量 会成为最后那个资源 (another-book.txt)。而且两个 defer 都会将这个资源作为最后的资源来关闭
+
+解决方案：
+
+```go
+package main
+
+import (
+    "fmt"
+    "io"
+    "os"
+)
+
+func do() error {
+    f, err := os.Open("book.txt")
+    if err != nil {
+        return err
+    }
+    if f != nil {
+        defer func(f io.Closer) {
+            if err := f.Close(); err != nil {
+                fmt.Printf("defer close book.txt err %v\n", err)
+            }
+        }(f)
+    }
+
+    // ..code...
+
+    f, err = os.Open("another-book.txt")
+    if err != nil {
+        return err
+    }
+    if f != nil {
+        defer func(f io.Closer) {
+            if err := f.Close(); err != nil {
+                fmt.Printf("defer close another-book.txt err %v\n", err)
+            }
+        }(f)
+    }
+
+    return nil
+}
+
+func main() {
+    do()
+}
+```
+
+
+
+
+
+
+
+
+
+#### 异常
+
+Golang 没有结构化异常，使用 panic 抛出错误，recover 捕获错误。
+
+异常的使用场景简单描述：Go中可以抛出一个panic的异常，然后在defer中通过recover捕获这个异常，然后正常处理。
+
+panic：
+
+```go
+    1、内置函数
+    2、假如函数F中书写了panic语句，会终止其后要执行的代码，在panic所在函数F内如果存在要执行的defer函数列表，按照defer的逆序执行
+    3、返回函数F的调用者G，在G中，调用函数F语句之后的代码不会执行，假如函数G中存在要执行的defer函数列表，按照defer的逆序执行
+    4、直到goroutine整个退出，并报告错误
+```
+
+recover：
+
+```go
+    1、内置函数
+    2、用来控制一个goroutine的panicking行为，捕获panic，从而影响应用的行为
+    3、一般的调用建议
+        a). 在defer函数中，通过recever来终止一个goroutine的panicking过程，从而恢复正常代码的执行
+        b). 可以获取通过panic传递的error
+```
+
+注意:
+
+```go
+    1.利用recover处理panic指令，defer 必须放在 panic 之前定义，另外 recover 只有在 defer 调用的函数中才有效。否则当panic时，recover无法捕获到panic，无法防止panic扩散。
+    2.recover 处理异常后，逻辑并不会恢复到 panic 那个点去，函数跑到 defer 之后的那个点。
+    3.多个 defer 会形成 defer 栈，后定义的 defer 语句会被最先调用。
+```
+
+
+
+```go
+package main
+
+func main() {
+    test()
+}
+
+func test() {
+    defer func() {
+        if err := recover(); err != nil {
+            println(err.(string)) // 将 interface{} 转型为具体类型。
+        }
+    }()
+
+    panic("panic error!")
+}
+```
+
+
+
+
+
+捕获函数 recover 只有在延迟函数直接调用才会终止错误，否则总是返回 nil。任何未捕获的错误都会沿调用堆栈向外传递。
+
+```go
+package main
+
+import "fmt"
+
+func test() {
+    defer func() {
+        fmt.Println(recover()) //有效
+    }()
+    defer recover()              //无效！
+    defer fmt.Println(recover()) //无效！
+    defer func() {
+        func() {
+            println("defer inner")
+            recover() //无效！
+        }()
+    }()
+
+    panic("test panic")
+}
+
+func main() {
+    test()
+}
+```
+
+输出:
+
+```go
+    defer inner
+    <nil>
+    test panic
+```
+
+
+
+
+
+
+
+使用延迟匿名函数或下面这样都是有效的。
+
+```go
+package main
+
+import (
+    "fmt"
+)
+
+func except() {
+    fmt.Println(recover())
+}
+
+func test() {
+    defer except()
+    panic("test panic")
+}
+
+func main() {
+    test()
+}
+```
+
+输出结果：
+
+```go
+    test panic
+```
+
+
+
+
+
+
+
+标准库 errors.New 和 fmt.Errorf 函数用于创建实现 error 接口的错误对象。通过判断错误对象实例来确定具体错误类型。
+
+```go
+package main
+
+import (
+    "errors"
+    "fmt"
+)
+
+var ErrDivByZero = errors.New("division by zero")
+
+func div(x, y int) (int, error) {
+    if y == 0 {
+        return 0, ErrDivByZero
+    }
+    return x / y, nil
+}
+
+func main() {
+    defer func() {
+        fmt.Println(recover())
+    }()
+    switch z, err := div(10, 0); err {
+    case nil:
+        println(z)
+    case ErrDivByZero:
+        panic(err)
+    }
+}
+```
+
+输出结果：
+
+```go
+    division by zero
+```
+
+
+
+
+
+Go实现类似 try catch 的异常处理
+
+```go
+package main
+
+import "fmt"
+
+func Try(fun func(), handler func(interface{})) {
+    defer func() {
+        if err := recover(); err != nil {
+            handler(err)
+        }
+    }()
+    fun()
+}
+
+func main() {
+    Try(func() {
+        panic("test panic")
+    }, func(err interface{}) {
+        fmt.Println(err)
+    })
+}
+```
+
+输出结果：
+
+```
+    test panic
+```
+
+
+
+
+
+
+
+### 方法
+
+#### 定义
+
+Golang 方法总是绑定对象实例，并隐式将实例作为第一实参 (receiver)。
+
+```
+• 只能为当前包内命名类型定义方法。
+• 参数 receiver 可任意命名。如方法中未曾使用 ，可省略参数名。
+• 参数 receiver 类型可以是 T 或 *T。基类型 T 不能是接口或指针。 
+• 不支持方法重载，receiver 只是参数签名的组成部分。
+• 可用实例 value 或 pointer 调用全部方法，编译器自动转换。
+```
+
+
+
+
+
+```go
+type User struct {
+    Name  string
+    Email string
+}
+
+//方法
+func (u User) Notify() {
+    fmt.Printf("%v : %v \n", u.Name, u.Email)
+}
+func main() {
+    // 值类型调用方法
+    u1 := User{"golang", "golang@golang.com"}
+    u1.Notify()
+    // 指针类型调用方法
+    u2 := User{"go", "go@go.com"}
+    u3 := &u2
+    u3.Notify()
+}
+```
+
+
+
+
+
+
+
+即使你使用了指针调用函数，但是函数的接受者是值类型，所以函数内部操作还是对副本的操作，而不是指针操作
+注意：当接受者是指针时，即使用值类型调用那么函数内部也是对指针的操作。
+
+```go
+type Data struct {
+    x int
+}
+
+func (self Data) ValueTest() { // func ValueTest(self Data);
+    fmt.Printf("Value: %p\n", &self)
+}
+
+func (self *Data) PointerTest() { // func PointerTest(self *Data);
+    fmt.Printf("Pointer: %p\n", self)
+}
+
+func main() {
+    d := Data{}
+    p := &d
+    fmt.Printf("Data: %p\n", p)
+
+    d.ValueTest()   // ValueTest(d)
+    d.PointerTest() // PointerTest(&d)
+
+    p.ValueTest()   // ValueTest(*p)
+    p.PointerTest() // PointerTest(p)
+}
+```
+
+输出:
+
+```
+    Data: 0xc42007c008
+    Value: 0xc42007c018
+    Pointer: 0xc42007c008
+    Value: 0xc42007c020
+    Pointer: 0xc42007c008
+```
+
+
+
+
+
+
+
+
+
+#### 对比函数
+
+对于普通函数，接收者为值类型时，不能将指针类型的数据直接传递，反之亦然。
+对于方法（如struct的方法），接收者为值类型时，可以直接用指针类型的变量调用方法，反过来同样也可
+
+
+
+
+
+#### 表达式
+
+Golang 表达式 ：根据调用者不同，方法分为两种表现形式:
+
+```go
+    instance.method(args...) ---> <type>.func(instance, args...)
+```
+
+前者称为 method value，后者 method expression。
+
+两者都可像普通函数那样赋值和传参，区别在于 method value 绑定实例，而 method expression 则须显式传参。
+
+```go
+package main
+
+import "fmt"
+
+type User struct {
+    id   int
+    name string
+}
+
+func (self *User) Test() {
+    fmt.Printf("%p, %v\n", self, self)
+}
+
+func main() {
+    u := User{1, "Tom"}
+    u.Test()
+
+    mValue := u.Test
+    mValue() // 隐式传递 receiver
+
+    mExpression := (*User).Test
+    mExpression(&u) // 显式传递 receiver
+}
+```
+
+输出结果:
+
+```
+    0xc42000a060, &{1 Tom}
+    0xc42000a060, &{1 Tom}
+    0xc42000a060, &{1 Tom}
+```
+
+
+
+
+
+
+
+需要注意，method value 会复制 receiver。
+
+```go
+package main
+
+import "fmt"
+
+type User struct {
+    id   int
+    name string
+}
+
+func (self User) Test() {
+    fmt.Println(self)
+}
+
+func main() {
+    u := User{1, "Tom"}
+    mValue := u.Test // 立即复制 receiver，因为不是指针类型，不受后续修改影响。
+
+    u.id, u.name = 2, "Jack"
+    u.Test()
+
+    mValue()
+}
+```
+
+输出结果
+
+```go
+    {2 Jack}
+    {1 Tom}
+```
+
+
+
+
+
+
+
+
+
+#### 自定义异常
+
+抛异常和处理异常
+
+1.1.1. 系统抛
+
+```go
+package main
+
+import "fmt"
+
+// 系统抛
+func test01() {
+   a := [5]int{0, 1, 2, 3, 4}
+   a[1] = 123
+   fmt.Println(a)
+   //a[10] = 11
+   index := 10
+   a[index] = 10
+   fmt.Println(a)
+}
+
+func getCircleArea(radius float32) (area float32) {
+   if radius < 0 {
+      // 自己抛
+      panic("半径不能为负")
+   }
+   return 3.14 * radius * radius
+}
+
+func test02() {
+   getCircleArea(-5)
+}
+
+//
+func test03() {
+   // 延时执行匿名函数
+   // 延时到何时？（1）程序正常结束   （2）发生异常时
+   defer func() {
+      // recover() 复活 恢复
+      // 会返回程序为什么挂了
+      if err := recover(); err != nil {
+         fmt.Println(err)
+      }
+   }()
+   getCircleArea(-5)
+   fmt.Println("这里有没有执行")
+}
+
+func test04()  {
+   test03()
+   fmt.Println("test04")
+}
+
+func main() {
+   test04()
+}
+```
+
+1.1.2. 返回异常
+
+```go
+package main
+
+import (
+   "errors"
+   "fmt"
+)
+
+func getCircleArea(radius float32) (area float32, err error) {
+   if radius < 0 {
+      // 构建个异常对象
+      err = errors.New("半径不能为负")
+      return
+   }
+   area = 3.14 * radius * radius
+   return
+}
+
+func main() {
+   area, err := getCircleArea(-5)
+   if err != nil {
+      fmt.Println(err)
+   } else {
+      fmt.Println(area)
+   }
+}
+```
+
+1.1.3. 自定义error：
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "time"
+)
+
+type PathError struct {
+    path       string
+    op         string
+    createTime string
+    message    string
+}
+
+func (p *PathError) Error() string {
+    return fmt.Sprintf("path=%s \nop=%s \ncreateTime=%s \nmessage=%s", p.path,
+        p.op, p.createTime, p.message)
+}
+
+func Open(filename string) error {
+
+    file, err := os.Open(filename)
+    if err != nil {
+        return &PathError{
+            path:       filename,
+            op:         "read",
+            message:    err.Error(),
+            createTime: fmt.Sprintf("%v", time.Now()),
+        }
+    }
+
+    defer file.Close()
+    return nil
+}
+
+func main() {
+    err := Open("/Users/5lmh/Desktop/go/src/test.txt")
+    switch v := err.(type) {
+    case *PathError:
+        fmt.Println("get path error,", v)
+    default:
+
+    }
+
+}
+```
+
+输出结果：
+
+```
+    get path error, path=/Users/pprof/Desktop/go/src/test.txt 
+    op=read 
+    createTime=2018-04-05 11:25:17.331915 +0800 CST m=+0.000441790 
+    message=open /Users/pprof/Desktop/go/src/test.txt: no such file or directory
+```
